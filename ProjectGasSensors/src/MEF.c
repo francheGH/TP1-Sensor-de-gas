@@ -1,28 +1,21 @@
 #include "ControladorHora.h"
+#include "ControladorGases.h"
 #include "lcd.h"
-#include "adc.h"
 
-#define CANT_GASES 3
+
+
 
 typedef enum {INICIAL, CAMBIAR_HORA, CAMBIAR_MINUTO, CAMBIAR_SEGUNDO, ALARMA, MODO_PROGRAMADOR} enumEstados;
 static enumEstados estado;
 static enumEstados estadoAnt;
 static char tecla; //valor que obtengo del teclado
-//arreglo donde van a estar las concentraciones de los gases tomadas por los sensores
-unsigned int concentraciones[CANT_GASES]={1,2,3};
-//arreglo con las concentraciones maximas teoricas impuestas por los programadores.
-unsigned int concentracion_maxima[CANT_GASES]={4,5,70};
-unsigned char gases[CANT_GASES]={"Metano", "Propano", "Monoxido"}; //arreglo de nombres de los gases
-static int concentracion_actual;
-static int gas_actual;
 unsigned char string[16]; //para imprimir en el LED
 
 void init_MEF(){
 	estado=INICIAL;
 	estadoAnt=INICIAL;
 	//inicio de variables de control
-	concentracion_actual=0;
-	gas_actual=0;
+	initGases();
 	imprimirHora();
 }
 void update_MEF(){
@@ -67,10 +60,8 @@ void start(){
 	imprimirHora();//preguntar a elias por que de vuelta un imprimir hora
 	ActualizarHora();
 	//se opto por actualizar de a uno, porque shit happens broh.
-	ActualizarConcentraciones(concentracion_actual);
-	imprimirGas(gas_actual, concentracion_actual);
-	gas_actual=(gas_actual+1)%3; //supuestamente esto seria el recorrido ciclico del vector, verificar
-	concentracion_actual=(concentracion_actual+1)%3;
+	imprimirGas();
+	actualizarConcentraciones();
 }
 
 boolean eventHappens(){
@@ -78,7 +69,7 @@ boolean eventHappens(){
 //1: Que se presione una tecla del KeyPad
 //2: Que las concentraciones sobrepasen el limite y activen la alarma
 //cualquiera de los 2 eventos anteriores dispararian un cambio de estado
-boolean ok=false;
+boolean ok= FALSE;
 
 	if(KeyPad_Update(&tecla){
 		ok=true;
@@ -92,6 +83,7 @@ boolean ok=false;
 		return 0;
 	}
 }
+
 void cambiarEstado(estado){
 	if (tecla!=" "){
 		switch (tecla){
@@ -105,29 +97,8 @@ void cambiarEstado(estado){
 			estado=CAMBIAR_SEGUNDO;
 			break;
 		case 'D':
-			break:
+			estado=MODO_PROGRAMADOR;
+			break;
 		}
-	}
-}
-void imprimirGas(int gas_actual, int concentracion_actual){
-	//imprime en el LCD
-
-}
-
-void ActualizarConcentraciones(int concentracion_actual){
-int concentracion_leida;
-	switch (concentracion_actual){
-		case 0:
-			leerMQ4(concentracion_leida); //retorna un valor en ppm de acuerdo a la letura del sensor
-			concentraciones[0]=concentracion_leida;
-			break;
-		case 1:
-			leerMQ6(concentracion_leida); //retorna un valor en ppm de acuerdo a la letura del sensor
-			concentraciones[1]=concentracion_leida;
-			break;
-		case 2:
-			leerMQ7(concentracion_leida); //retorna un valor en ppm de acuerdo a la letura del sensor
-			concentraciones[2]=concentracion_leida;
-			break;
 	}
 }

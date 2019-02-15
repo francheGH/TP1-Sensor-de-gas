@@ -1,4 +1,5 @@
 #include "derivative.h"
+#include "sapi.h"
 
 const char Nulo = ' ';
 const char teclado[4][4]={{"1", "2", "3", "A"}, 
