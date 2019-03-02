@@ -3,5 +3,5 @@
 typedef unsigned int uint8;
 void ActualizarHora(void);
 void imprimirHora(void);
-//void imprimirHoraParpadeando(state estadoact);
+void imprimirHoraParpadeando(state estadoact);
 #endif 
