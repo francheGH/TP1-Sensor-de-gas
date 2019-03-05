@@ -1,214 +1,141 @@
-//#include "../../practica1/inc/ControladorHora.h"
-//#include "../../practica1/inc/lcd.h"
-
-#ifdef __cplusplus
-
-extern "C"
-#endif
-
-/* Copyright 2014, 2015 Mariano Cerdeiro
- * Copyright 2014, Pablo Ridolfi
- * Copyright 2014, Juan Cecconi
- * Copyright 2014, Gustavo Muro
- * Copyright 2015, Eric Pernia
- * All rights reserved.
- *
- * This file is part of CIAA Firmware.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- *
- */
-
-/** \brief Bare Metal example source file
- **
- ** This is a mini example of the CIAA Firmware.
- **
- **/
-
-/** \addtogroup CIAA_Firmware CIAA Firmware
- ** @{ */
-/** \addtogroup Examples CIAA Firmware Examples
- ** @{ */
-/** \addtogroup Baremetal Bare Metal example source file
- ** @{ */
-
-/*
- * Initials    Name
- * ---------------------------
- * ENP          Eric Pernia
- *
- */
-
-/*
- * modification history (new versions first)
- * -----------------------------------------------------------
- * 20151104   v0.0.1   ENP   First version
- */
-
-/*==================[inclusions]=============================================*/
-#include "main.h"       /* <= own header */
+#include "sapi.h"
+#include "stdio.h"
+#include "math.h"
+#include "stdint.h"
+#include "ControladorHora.h"
+#include "mqX.h"
 #include "MEF.h"
-//#include "lcd.h"
-//#include "ControladorHora.h"
-#ifndef CPU
-#error CPU shall be defined
-#endif
-#if (lpc4337 == CPU)
-#include "chip.h"
-#elif (mk60fx512vlq15 == CPU)
-#else
-#endif
 
-/*==================[macros and definitions]=================================*/
+	//bool_t valor;
+volatile char fseg;
+/* FUNCION que se ejecuta cada vez que ocurre un Tick. */
+//void myTickHook(void *ptr) {
+//	static uint16_t count;
+//	count++;
+//	if (count == 20)
+//		fseg = 1;
 
-#define TEC1_P    1
-#define TEC1_P_   0
-#define TEC1_GPIO 0
-#define TEC1_PIN  4
+//}
+int contador=0;
 
-#define TEC2_P    1
-#define TEC2_P_   1
-#define TEC2_GPIO 0
-#define TEC2_PIN  8
 
-#define TEC3_P    1
-#define TEC3_P_   2
-#define TEC3_GPIO 0
-#define TEC3_PIN  9
 
-#define TEC4_P    1
-#define TEC4_P_   6
-#define TEC4_GPIO 1
-#define TEC4_PIN  9
 
-#define LEDR_P    2
-#define LEDR_P_   0
-#define LEDR_GPIO 5
-#define LEDR_PIN  0
 
-#define LEDG_P    2
-#define LEDG_P_   1
-#define LEDG_GPIO 5
-#define LEDG_PIN  1
-
-#define LEDB_P    2
-#define LEDB_P_   2
-#define LEDB_GPIO 5
-#define LEDB_PIN  2
-
-#define LED1_P    2
-#define LED1_P_  10
-#define LED1_GPIO 0
-#define LED1_PIN 14
-
-#define LED2_P    2
-#define LED2_P_  11
-#define LED2_GPIO 1
-#define LED2_PIN 11
-
-#define LED3_P    2
-#define LED3_P_  12
-#define LED3_GPIO 1
-#define LED3_PIN 12
-
-#define INPUT     0
-#define OUTPUT    1
-
-#define ON        1
-#define OFF       0
-
-#define TICKRATE_HZ (1000) /* 1000 ticks per second --> 1ms Tick */
-
-/*==================[internal data declaration]==============================*/
-
-/*==================[internal functions declaration]=========================*/
-
-/*==================[internal data definition]===============================*/
-
-/*==================[external data definition]===============================*/
-
-volatile uint32_t msTicks = 0;
-uint32_t delay_ms = 0;
-uint32_t tiempoCumplido = 0;
-
-/*==================[internal functions definition]==========================*/
-
-void SysTick_Handler(void) {
-
-	msTicks++;
-
-	if (msTicks == delay_ms) {
-		tiempoCumplido = 1;
-		msTicks = 0;
-	}
-}
 
 int main(void) {
-	/* perform the needed initialization here */
-	boardInit();
-	//boardConfig();
-	LCD_init(DISPLAY_8X5 | _2_LINES, DISPLAY_ON | CURSOR_OFF); // Inicializacion del display
-	init_MEF();
-	//imprimirHora(); // Escribo la hora al iniciar
+	//state estado;
+	boardConfig();
+	/* Variable de Retardo no bloqueante */
+	delay_t delay;
+	delayConfig(&delay, 100);
+	/* Inicializar la placa */
+
+
+	/* Inicializar el conteo de Ticks con resolucion de 50ms (se ejecuta
+	 periodicamente una interrupcion cada 50ms que incrementa un contador de
+	 Ticks obteniendose una base de tiempos). */
+	//tickConfig(50);
+
+	/* Se agrega ademas un "tick hook" nombrado myTickHook. El tick hook es
+	 simplemente una funcion que se ejecutara peri�odicamente con cada
+	 interrupcion de Tick, este nombre se refiere a una funcion "enganchada"
+	 a una interrupcion.
+	 El segundo parametro es el parametro que recibe la funcion myTickHook
+	 al ejecutarse. En este ejemplo se utiliza para pasarle el led a titilar.
+	 */
+	//tickCallbackSet(myTickHook, (void*) LEDR);
+	//delay(1000);
 
 
 
-	delay_ms = 1000;
-	LCD_pos_xy(0,5);
-	//LCD_write_char('0');
-	while (1) {
+	// Inicializar LCD de 16x2 (caracteres x lineas) con cada caracter de 5x2 pixeles
+	lcdInit(16, 2, 5, 8);
+	lcdClear(); // Borrar la pantalla
+	lcdGoToXY(1, 1); // Poner cursor en 1, 1
+	adcConfig( ADC_ENABLE );
+	gpioConfig(GPIO1, GPIO_OUTPUT);
+
+	keypad_t keypad2;
+	//extern bool_t valor;
+	uint16_t tecla2 = 0;
+
+	// Filas --> Salidas
+	uint8_t keypadRowPins2[4] = {
+			GPIO3, 	// Row 0
+			GPIO5,	// Row 1
+			GPIO7,  // Row 2
+			GPIO8   // Row 3
+			};
+
+	// Columnas --> Entradas con pull-up (MODO = GPIO_INPUT_PULLUP)
+	uint8_t keypadColPins2[4] = {
+			GPIO0,   // Column 0
+			GPIO2,   // Column 1
+			GPIO4,   // Column 2
+			GPIO6    // Column 3
+			};
+
+	keypadConfig(&keypad2, keypadRowPins2, 4, keypadColPins2, 4);
+	init_MEF(keypad2);
+
+	for (;;) {
 
 
-		if (tiempoCumplido) {
-			//imprimirHora();
-
-			//ActualizarHora();
-			update_MEF();
-
-			tiempoCumplido = 0;
-			/*if (toggle == 0){
-			ledSet(ON);
-			toggle=1;
+		if (delayRead(&delay)) {
+			contador++;
+			if (contador==10){
+					lcdClear();
+					imprimirHora();
+					ActualizarHora();
+					contador=0;
 			}
-			else{
-				ledSet(OFF);
-				toggle=0;
+			update_MEF();
+			// Si me encuentro en un estado en el que se muestra la hora
 
-			}*/
+			//if (estado == CAMBIAR_HORA || estado == CAMBIAR_SEGUNDOS
+			//		|| estado == CAMBIAR_MINUTOS) {
+			//	imprimirHoraParpadeando(estado);
+			}
+
+
+
 
 		}
 
-		}
 
-	return 0;
-}
+	//	tickCallbackSet(myTickHook, (void*) LEDG);
 
-/** @} doxygen end group definition */
-/** @} doxygen end group definition */
-/** @} doxygen end group definition */
-/*==================[end of file]============================================*/
+	}
 
+//Fin de la configuracion del keypad
+
+/*prueba sensor
+ int concentration_mq4;
+ char str[16];
+ adcConfig( ADC_ENABLE);
+ concentration_mq4 = sensorlecturamq(RL_MQ4, X0_MQ4, X1_MQ4, Y0_MQ4,
+ Y1_MQ4, R0_MQ4, CH1);
+ itoa(concentration_mq4, str, 10);
+ lcdSendStringRaw( str);*/
+
+/*prueba teclado
+ if (keypadRead(&keypad, &tecla)) {
+ if (tecla == 1) {
+ lcdSendStringRaw("2");
+ }
+ }*/
+
+/*prueba buzzer
+ valor = !gpioRead(TEC4);
+ gpioWrite(GPIO1, valor);*/
+
+/*pruebalcd
+ if (delayRead(&delay)) {
+ lcdClear();
+ lcdGoToXY(1, 1);
+ ActualizarHora();
+ imprimirHora();
+ lcdGoToXY(6, 2);
+ // printf("Hocmd");
+ }*/
