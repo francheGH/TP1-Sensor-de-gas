@@ -54,6 +54,7 @@ void lcd_sapi_XY( uint8_t x, uint8_t y)
 {
 lcdGoToXY(x,y);
 }
+
 /*==================[definiciones de funciones internas]=====================*/
 
 /*==================[definiciones de funciones externas]=====================*/

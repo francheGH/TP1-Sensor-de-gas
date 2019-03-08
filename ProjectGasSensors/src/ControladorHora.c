@@ -14,28 +14,27 @@
 #define DECENA 1
 #define UNIDAD 2
 
-static uchar8 reloj[16] = { 32, 32, 32, 32, 1, 2, ':', 0, 0, ':', 0, 0, 32, 32,
-		32, 32, '\0' }; // Arreglo de codigos ascii que corresponden la hora (para imprimir se le debe sumar el caracter '0' a cada posicion)
+static char reloj[16] = {32, 32, 32, 32, 1, 2, ':', 0, 0, ':', 0, 0, 32, 32, 32, 32}; // Arreglo de codigos ascii que corresponden la hora (para imprimir se le debe sumar el caracter '0' a cada posicion)
 
 // Variables que corresponden a las decenas y unidades de las horas, minutos y segundos
 
-uchar8 dhora = 1;
-uchar8 uhora = 2;
+char dhora = 1;
+char uhora = 2;
 
-uchar8 dmin = 0;
-uchar8 umin = 0;
+char dmin = 0;
+char umin = 0;
 
-uchar8 dseg = 0;
-uchar8 useg = 0;
+char dseg = 0;
+char useg = 0;
 
-uchar8 dhoraAnterior;
-uchar8 uhoraAnterior;
+char dhoraAnterior;
+char uhoraAnterior;
 
-uchar8 dminAnterior;
-uchar8 uminAnterior;
+char dminAnterior;
+char uminAnterior;
 
-uchar8 dsegAnterior;
-uchar8 usegAnterior;
+char dsegAnterior;
+char usegAnterior;
 
 volatile int i; // Indice para for
 
@@ -48,7 +47,7 @@ void cambiarTodosValoresReloj(void) {
 	reloj[UNIDAD_SEGUNDO] = useg;
 }
 
-void cambiarValoresReloj(uchar8 aux, uchar8 HS_MIN_SEG, uchar8 posicion) {
+void cambiarValoresReloj(char aux, char HS_MIN_SEG, char posicion) {
 	switch (HS_MIN_SEG) {
 	case HORA:
 		switch (posicion) {
@@ -126,7 +125,7 @@ void imprimirHora() { // Escribe la hora
 		if (i != 6 && i != 9)
 			reloj[i] = reloj[i] + '0'; //time[]=valor ascii + '0' valor ascii del 	0=48 ejemplo= -16 +48= 32 significado del espacio
 	}
-	lcdSendStringRaw(reloj);
+	lcdSendStringRaw(reloj); //cambie recien "*"
 }
 void guardarTiempo(void) {
 	dhoraAnterior = dhora;
@@ -145,8 +144,12 @@ void recuperarTiempo(void) {
 	dseg = dsegAnterior;
 	useg = usegAnterior;
 }
-
-void imprimirHoraParpadeando(int pos) {
+void imprimihoraP(int pos)
+{
+	lcdGoToXY(pos,1);
+	lcdSendStringRaw("  ");
+}
+/*void imprimirHoraParpadeando(int pos) {
 	// Parpadea el parametro de hora correspondiente si se encuentra en algun
 	//modo de 	modificació n
 // Imprime blancos en la posicion de los digitos correspondientes de acuerdo al	estado
@@ -220,9 +223,9 @@ void imprimirHoraParpadeando(int pos) {
 		}
 		break;
 	}
-}
+}*/
 
-void cambiarHora(uchar8 decena, uchar8 unidad) {
+void cambiarHora(char decena, char unidad) {
 	if (((decena == 2) && (unidad < 4)) || ((decena < 2) && (unidad < 10))) {
 		dhora = decena;
 		uhora = unidad;
@@ -230,7 +233,7 @@ void cambiarHora(uchar8 decena, uchar8 unidad) {
 		reloj[UNIDAD_HORA] = uhora;
 	}
 }
-void cambiarMinuto(uchar8 decena, uchar8 unidad) {
+void cambiarMinuto(char decena, char unidad) {
 	if ((decena < 6) && (unidad < 10)) {
 		dmin = decena;
 		umin = unidad;
@@ -238,7 +241,7 @@ void cambiarMinuto(uchar8 decena, uchar8 unidad) {
 		reloj[UNIDAD_MINUTO] = umin;
 	}
 }
-void cambiarSegundo(uchar8 decena, uchar8 unidad) {
+void cambiarSegundo(char decena, char unidad) {
 	if ((decena < 6) && (unidad < 10)) {
 		dseg = decena;
 		useg = unidad;

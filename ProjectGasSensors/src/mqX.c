@@ -12,14 +12,14 @@ const uint16_t READ_SAMPLE_TIMES = 5;       // Numero muestras
 // Ajustar estos valores para vuestro sensor según el Datasheet
 // (opcionalmente, según la calibración que hayáis realizado)
 
-float readMQ (uint16_t RL_VALUE, uint16_t CH);
+float readMQ (uint16_t RL_VALUE, int CH);
 float getMQResistance (uint16_t raw_adc, uint16_t RL_VALUE);
 float getConcentrationmq (float rs_ro_ratio,float coord, float scope);
 int sensorlecturamq (uint16_t RL, float X0, float X1, float Y0,float Y1,float R0, int CH);
 
 
 int sensorlecturamq (uint16_t RL, float X0, float X1, float Y0,float Y1,float R0, int CH) {
-	char str[16];
+
 	// Puntos de la curva de concentración {X, Y}
 	const float punto0[2] = { log10(X0), log10(Y0) };
 	const float punto1[2] = { log10(X1), log10(Y1) };
@@ -37,14 +37,14 @@ int sensorlecturamq (uint16_t RL, float X0, float X1, float Y0,float Y1,float R0
 
 
 // Obtener la resistencia promedio en N muestras
-float readMQ(uint16_t RL_VALUE, uint16_t CH)
+float readMQ(uint16_t RL_VALUE, int CH)
 {  uint16_t mq;
 
    float rs = 0;
    for (int i = 0;i<READ_SAMPLE_TIMES;i++) {
 	  mq=adcRead ( CH );
       rs = rs+ getMQResistance(mq,RL_VALUE);
-      delay(100);
+      //delay(100);
    }
    return rs / 100;
 }

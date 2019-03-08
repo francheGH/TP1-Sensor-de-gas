@@ -1,6 +1,5 @@
 #include <sapi.h>
-typedef unsigned char uchar8;
-
+#include <ControladorGases.h>
 typedef enum {
 	INICIAL,
 	CAMBIAR_HORA,
@@ -17,3 +16,4 @@ void cambiarEstado();
 void fcambiar_H();
 void fcambiar_M();
 void fcambiar_S();
+void fmodo_P();

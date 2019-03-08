@@ -1,32 +1,43 @@
 #include "sapi.h"
 #include "MEF.h"
 #include "ControladorHora.h"
-#include "ContralodorGases.h"
+#include "ControladorGases.h"
 
-static state estadonuevo;
+
 
 
 
 volatile int total[3] = { 400, 400, 200 }; // pueden ir variando
-static int concentracion_maxima[3] = { 400, 400, 200 }; //fijar por defecto
-static uchar8 aux;
-static uchar8 valorAuxiliar;
+
+//static char aux;
+//static char valorAuxiliar;
 const static uint16_t teclado[16]={
         1,    2,    3, 0x0a,
         4,    5,    6, 0x0b,
         7,    8,    9, 0x0c,
      0x0e,    0, 0x0f, 0x0d
    };
-static keypad_t keypad;
+const static char tecladochar[16]={
+
+	    '1',    '2',    '3', 'A',
+	        '4',    '5',    '6', 'B',
+	        '7',    '8',    '9', 'C',
+	     '#',   '0', '*', 'D'
+
+};
+keypad_t keypad;
 //extern bool_t valor;
-static uint16_t tecla = 0; //valor que obtengo del teclado
+uint16_t tecla=0; //valor que obtengo del teclado
+//esto era un char
 static char teclaAux;
 static state estado;
 static state estadoAnt;
-static unsigned char string[16]; //para imprimir en el LED
+static uint16_t ocupado=0;
 static int flagCambio;
 uint16_t contador;
-static char cont_parpadeo;
+
+static int Fread=0;
+int flagAlarma=0;
 
 void init_MEF(keypad_t keypad2) {
 	estado = INICIAL;
@@ -34,8 +45,7 @@ void init_MEF(keypad_t keypad2) {
 	keypad=keypad2;
 	//initKeypad();
 	//inicio de variables de control
-	imprimirHora();
-	initGases();
+//	imprimirHora();
 }
 
 
@@ -56,7 +66,7 @@ void update_MEF() {
 				fcambiar_S();
 				break;
 			case ALARMA:
-				falarma();
+				//
 				break;
 			case MODO_PROGRAMADOR:
 				fmodo_P();
@@ -79,14 +89,13 @@ void start(){
 	//3 segundos
 	//ambas soluciones desde el punto de vista del tiempo pueden resultar nimiedades.
 	//pero desde el punto de vista de presicion y efectividad presentan errores graves
-	actualizarConcentraciones();
+	readSensor();
+	imprimirGas();
 
-	//imprimirHora();
-	//ActualizarHora();
 	//preguntar a elias por que de vuelta un imprimir hora
 	//ActualizarHora();
 	//se opto por actualizar de a uno, porque shit happens broh.
-	//imprimirGas();
+
 	//actualizarConcentraciones();
 }
 
@@ -96,40 +105,49 @@ bool_t eventHappens(){
 //2: Que las concentraciones sobrepasen el limite y activen la alarma
 //cualquiera de los 2 eventos anteriores dispararian un cambio de estado
 bool_t ok= FALSE;
-
+if(ocupado==0){
 	if(keypadRead(&keypad, &tecla)){
-		teclaAux=teclado[tecla];
+		teclaAux=tecladochar[tecla];
 		ok=TRUE;
 	}
-	if (chequear_gases()){
-		ok=TRUE;
-	}
+}
+//	if (chequearGases()){
+//		ok=TRUE;
+//		flagAlarma=1;
+//	}
 	return ok;
 }
 
 void cambiarEstado(){
 	if (teclaAux!=' '){
 		switch (teclaAux){
-		case 0x0a:
+		case 'A':
 			estado=CAMBIAR_HORA;flagCambio=0;
 			break;
-		case 0x0b:
+		case 'B':
 			estado=CAMBIAR_MINUTOS;flagCambio=0;
 			break;
-		case 0x0c:
+		case 'C':
 			estado=CAMBIAR_SEGUNDOS;flagCambio=0;
 			break;
-		case 0x0d:
+		case 'D':
 			estado=MODO_PROGRAMADOR;
 			break;
 		}
 	}
+	if (flagAlarma){
+		estado=ALARMA;
+	}
 }
 void fcambiar_H(){
-	char teclaAuxiliar;
-	static uchar8 decena=' ';
-	static uchar8 unidad=' ';
-	//imprimirHoraParpadeando(1);
+	static char teclaAuxiliar;
+	static char decena=' ';
+	static char unidad=' ';
+	static uint8_t cont=0;
+	if(cont++ ==2){
+		imprimihoraP(5);
+		cont=0;}
+	ocupado=1;
 	if (keypadRead(&keypad, &tecla)){
 				teclaAuxiliar=teclado[tecla];
 				if (flagCambio==0){
@@ -139,17 +157,21 @@ void fcambiar_H(){
 						unidad=teclaAuxiliar;
 						cambiarHora(decena, unidad);
 						flagCambio=0;
+						ocupado=0;
 						estado=INICIAL;
 					}
 	}
 
 }
 void fcambiar_M(){
-	char teclaAuxiliar;
-	static uchar8 decena;
-	static uchar8 unidad;
-	//Parpadeo (decena,unidad,2,&cont_parpadeo);
-	//imprimirHoraParpadeando(2);
+	uint16_t teclaAuxiliar;
+	static char decena;
+	static char unidad;
+	ocupado=1;
+	static uint8_t cont=0;
+	if(cont++ ==2){
+		imprimihoraP(8);
+		cont=0;}
 	if (keypadRead(&keypad, &tecla)){
 				teclaAuxiliar=teclado[tecla];
 				if (flagCambio==0){
@@ -159,15 +181,21 @@ void fcambiar_M(){
 						unidad=teclaAuxiliar;
 						cambiarMinuto(decena, unidad);
 						flagCambio=0;
+						ocupado=0;
 						estado=INICIAL;
 					}
 	}
 
 }
 void fcambiar_S(){
-	char teclaAuxiliar;
-	static uchar8 decena;
-	static uchar8 unidad;
+	uint16_t teclaAuxiliar;
+	static char decena;
+	static char unidad;
+	ocupado=1;
+	static uint8_t cont=0;
+	if(cont++ ==2){
+		imprimihoraP(11);
+		cont=0;}
 	//imprimirHoraParpadeando(3);
 	if (keypadRead(&keypad, &tecla)){
 		teclaAuxiliar=teclado[tecla];
@@ -178,37 +206,41 @@ void fcambiar_S(){
 								unidad=teclaAuxiliar;
 								cambiarSegundo(decena, unidad);
 								flagCambio=0;
+								ocupado=0;
 								estado=INICIAL;
 							}
 	}
 }
 void fmodo_P(){
-	char teclaAuxiliar;
+	uint16_t teclaAuxiliar;
 	int mq=0;
+	int fin=0; //flag de finalizacion
 	if (keypadRead(&keypad, &tecla)&&Fread){
 		teclaAuxiliar=teclado[tecla];
-		Fread=0;
+		Fread=0; //flag de lectura
 	}
 	if ( Fread==0){
 		switch (teclaAuxiliar){
-			case 1:
-			mq=4; actualizarConcentraciones (keypad, concentracion_maxima[0], fin);
+			case 0x0a:
+			mq=4; actualizarConcentraciones (mq, keypad, &fin);
 			break;
-			case 2:
-			mq=6; ingresarValores(keypad, concentracion_maxima[1],fin);
+			case 0x0b:
+			mq=6; actualizarConcentraciones(mq, keypad, &fin);
 			break;
-			case 3:
-			mq=7;ingresarValores(keypad, concentracion_maxima[2],fin);
+			case 0x0c:
+			mq=7;actualizarConcentraciones(mq, keypad, &fin);
 			break;
 		}
-		if (fin)
-			Fread=1;s
+		if (fin){
+			Fread=1;
 			estado=INICIAL;
+		}
+
 	}
 }
 
 
-/*void Parpadeo(uchar8 decena, uchar8 unidad, char pos, char *cont_parpadeo){
+/*void Parpadeo(char decena, char unidad, char pos, char *cont_parpadeo){
 	*cont_parpadeo= *cont_parpadeo + 1;
 	if(*cont_parpadeo == 5){
 			switch (pos){
