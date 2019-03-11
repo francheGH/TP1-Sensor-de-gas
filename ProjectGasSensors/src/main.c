@@ -2,28 +2,27 @@
 #include "stdio.h"
 #include "math.h"
 #include "stdint.h"
-
+//#include "MEF.h"
+#include "ControladorHora.h"
+#include "ControladorGases.h"
 //#include "MEF.h"
 
 //bool_t valor;
-volatile uint16_t fseg,f200;
+volatile uint16_t fseg, f200;
 static int count = 0;
 
 int main(void) {
 
-	boardConfig();
+	boardConfig();/* Inicializar la placa */
 
 	/* Variable de Retardo no bloqueante */
 	delay_t delay;
-	 delayConfig(&delay, 200);
-
-	/* Inicializar la placa */
+	delayConfig(&delay, 200);
 
 	/* Inicializar el conteo de Ticks con resolucion de 50ms (se ejecuta
 	 periodicamente una interrupcion cada 50ms que incrementa un contador de
 	 Ticks obteniendose una base de tiempos). */
 	//tickConfig(50);
-
 // Inicializar LCD de 16x2 (caracteres x lineas) con cada caracter de 5x2 pixeles
 	lcdInit(16, 2, 5, 8);
 	lcdClear(); // Borrar la pantalla
@@ -60,27 +59,27 @@ int main(void) {
 	//tickCallbackSet(myTickHook, (void*)fseg);
 	//delay(1000);
 	for (;;) {
-		uint16_t tecla;
-		if(delayRead(&delay)){
+		//uint16_t tecla;
+		if (delayRead(&delay)) {
 			count++;
-			f200=1;
+			f200 = 1;
 
 		}
-			if (count==5){
-				fseg=1;
-				count=0;}
+		if (count == 5) {
+			fseg = 1;
+			count = 0;
+		}
 
 //
-		if(fseg==1){
-			fseg=0;
-			 lcdClear();
-			 imprimirHora();
-			 ActualizarHora();
+		if (fseg == 1) {
+			fseg = 0;
+			lcdClear();
+			imprimirHora();
+			ActualizarHora();
 		}
-		if(f200==1)
-		{
-			update_MEF();
-			f200=0;
+		if (f200 == 1) {
+		    update_MEF();
+			f200 = 0;
 		}
 		/*if (delayRead(&delay)) {
 		 contador++;

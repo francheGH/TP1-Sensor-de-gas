@@ -9,15 +9,14 @@
 const uint16_t READ_SAMPLE_INTERVAL = 100;    // Tiempo entre muestras
 const uint16_t READ_SAMPLE_TIMES = 5;       // Numero muestras
 
-// Ajustar estos valores para vuestro sensor según el Datasheet
-// (opcionalmente, según la calibración que hayáis realizado)
+// Se adjuntan estos valores para vuestro sensor según el Datasheet
 
 float readMQ (uint16_t RL_VALUE, int CH);
 float getMQResistance (uint16_t raw_adc, uint16_t RL_VALUE);
 float getConcentrationmq (float rs_ro_ratio,float coord, float scope);
 int sensorlecturamq (uint16_t RL, float X0, float X1, float Y0,float Y1,float R0, int CH);
 
-
+// Se recibe, la resistencia de carga, valor X0,X1 Y0, Y1 Segun datasheet, R0= valor de clean air
 int sensorlecturamq (uint16_t RL, float X0, float X1, float Y0,float Y1,float R0, int CH) {
 
 	// Puntos de la curva de concentración {X, Y}
@@ -44,7 +43,7 @@ float readMQ(uint16_t RL_VALUE, int CH)
    for (int i = 0;i<READ_SAMPLE_TIMES;i++) {
 	  mq=adcRead ( CH );
       rs = rs+ getMQResistance(mq,RL_VALUE);
-      //delay(100);
+      //delay(50);
    }
    return rs / 100;
 }
